@@ -37,13 +37,49 @@
   </div>
 </script>
 
+
+<!-- //ユーザー新規作成 -->
+<script type="text/x-template" id="user-create">
+  <div>
+    <div class="sending" v-if="sending">Sending...</div>
+    <div>
+      <h2>新規ユーザー作成</h2>
+      <div>
+        <label for="">名前：</label>
+        <input type="text" v-model="user.name">
+      </div>
+      <div>
+        <label for="">説明文：</label>
+        <textarea v-model="user.description"></textarea>
+      </div>
+      <div v-if="error" class="error">
+        {{error}}
+      </div>
+      <div>
+        <input type="button" @click="createUser" value="送信">
+      </div>
+    </div>
+  </div>
+</script>
+
 <script>
-    var getUsers = function (callback) {
-    setTimeout(function () {
-      callback(null, userData)
+  //ユーザー新規登録
+  var postUser = function(params, callback) {
+    setTimeout(function() {
+      params.id = userData.length + 1
+      userData.push(params)
+      callback(null, params);
     }, 1000)
   }
 
+  //ユーザー一覧ページのユーザーを取得する。
+    var getUsers = function (callback) {
+      setTimeout(function () {
+        callback(null, userData)
+      }, 1000)
+  }
+
+  //ユーザー詳細ページ（1人のユーザーを取得している。）
   var getUser = function (userId, callback) {
     setTimeout(function () {
       var filterdUsers = userData.filter(function(user) {
@@ -117,7 +153,7 @@
       '$route': 'fetchData'
     },
     methods: {
-      fetchData: function(){
+      fetchData: function() {
         this.loading = true
         getUsers((function(err, users) {
           this.loading = false
@@ -125,6 +161,49 @@
             this.error = err.toString()
           } else {
             this.users = users
+          }
+        }).bind(this))
+      }
+    }
+  }
+
+  var UserCreate = {
+    template: "#user-create",
+    data: function() {
+      return {
+        sending: false,
+        user: this.defaultUser(),
+        error: null
+      }
+    },
+
+    // created: function() {
+    // },
+
+    methods: {
+      defaultUser: function() {
+        return {
+          name: '',
+          description: ''
+        }
+      },
+      createUser: function() {
+        if (this.user.name.trim() === '' ) {
+          this.error = "Nameは必須です。"
+          return
+        }
+        if (this.user.description.trim() === '') {
+          this.error = 'Descriptionは必須です。'
+          return 
+        }
+        postUser(this.user, (function(err, user) {
+          this.sending = false
+          if (err) {
+            this.error = err.toString()
+          } else {
+            this.error = null
+            this.user = this.defaultUser()
+            this.$router.push('/users')
           }
         }).bind(this))
       }
@@ -144,9 +223,13 @@
         component: UserList
       },
       {
+        path: '/users/new',
+        component: UserCreate
+      },
+      {
         path: '/users/:userId',
         component:UserDetail
-      }
+      },
     ]
   })
 

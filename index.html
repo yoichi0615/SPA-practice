@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<title>Vue.js SPAサンプルアプリケーション</title>
+<style>
+
+</style>
+
+<div id="app">
+  <nav>
+    <router-link to="/top">トップページ</router-link>
+    <router-link to="/users">ユーザー一覧ページ</router-link>
+  </nav>
+  <router-view></router-view>
+</div>
+
+<script src="https://unpkg.com/vue@2.5.17"></script>
+<script src="https://unpkg.com/vue-router@3.0.1"></script>
+
+<script type="text/x-template" id="user-list">
+  <div>
+    <div class="loading" v-if="loading">読み込み中...</div>
+    <div class="error" v-if="error">{{ error }}</div>
+    <div v-for="user in users" :key="user.id">
+      <h2>{{ user.name }}</h2>
+    </div>
+  </div>
+  <div>ユーザーページ一覧です</div>
+</script>
+
+<script>
+  var getUsers = function (callback) {
+    setTimeout(function () {
+      callback(null, [
+        {
+          id: 1,
+          name: 'Yohei Noda'
+        },
+        {
+          id: 2,
+          name: 'Takuya Tejima'
+        }
+      ])
+    }, 1000)
+  }
+
+
+  var UserList = {
+    template: '#user-list',
+    data: function() {
+      return {
+        loading: false,
+        users: function() { return []; },
+        error: null
+      }
+    },
+    created: function() {
+      this.fetchData();
+    },
+    watch: {
+      '$route': 'fetchData'
+    },
+    methods: {
+      fetchData: function(){
+        this.loading = true
+        getUsers((function(err, users) {
+          this.loading = false
+          if (err) {
+            this.error = err.toString()
+          } else {
+            this.users = users
+          }
+        }).bind(this))
+      }
+    }
+  }
+
+  var router = new VueRouter({
+    routes: [
+      {
+        path: '/top',
+        component: {
+          template: '<div>トップページです</div>'
+        }
+      },  
+      {
+        path: '/users',
+        component: UserList
+      }
+    ]
+  })
+
+  var app = new Vue({
+    router: router
+  }).$mount('#app')
+</script>
